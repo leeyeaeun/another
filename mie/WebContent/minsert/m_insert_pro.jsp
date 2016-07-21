@@ -13,7 +13,7 @@
 
 <%
 
-	Mdao mdao = new Mdao ();
+	Mdao mdao = new Mdao();
 	mdao.mInsert(m);
 
 	response.sendRedirect(request.getContextPath()+"/user/user_list.jsp");
