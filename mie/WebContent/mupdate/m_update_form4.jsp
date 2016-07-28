@@ -1,12 +1,18 @@
 <%@ page language="java" contentType="text/html; charset=EUC-KR"
     pageEncoding="EUC-KR"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%@ page import = "java.sql.DriverManager" %>
+<%@ page import = "java.sql.Connection" %>
+<%@ page import = "java.sql.PreparedStatement" %>
+<%@ page import = "java.sql.ResultSet" %>
+<%@ page import = "java.sql.SQLException" %>
+ <%@ page import = "kr.or.ksmart.driverdb.DriverDB" %>
  <%@ page import="kr.or.ksmart.dao.Mdao" %>
- <%@ page import="kr.or.ksmart.dto.Member" %>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
 <link rel="stylesheet" type="text/css" href="main.css" />
+
 <style>
 table, th, td {
     border: 1px solid black;
@@ -18,27 +24,57 @@ th, td {
 </style>
 </head>
 <body>
+
 <%@ include file="/module/top.jsp" %>
 <%@ include file="/module/left.jsp" %>
-<%
 
-//m_list에서 id값 받아온다 
+
+<%
 String send_id = request.getParameter("send_id");
 System.out.println(send_id + "<-- send_id m_update_form.jsp");
 
-//jdbc연결된 Mdao 객체생성
-Mdao mdao = new Mdao();
-//Mdao객체내부 쿼리실행준비메서드에 받아온 id값 입력하고 
-//Member객체형 m변수에 참조값 넣는다.
-Member m = mdao.mSelectforUpdate(send_id);
+Connection conn = null;
+PreparedStatement pstmt = null;
+ResultSet rs = null;
 
-//Member객체내부에서 회원정보를 꺼내온다.
-String dbid = m.getM_id();
-String dbpw = m.getM_pw();
-String dblevel = m.getM_level();
-String dbname = m.getM_name();
-String dbemail = m.getM_email();
+String dbid = null;
+String dbpw = null;
+String dblevel = null;
+String dbname = null;
+String dbemail = null;
+
+try{
+
+	DriverDB db = new DriverDB();
+	conn = db.driverDbcon();
+	System.out.println(conn + "<--conn");
 	
+	
+	pstmt = conn.prepareStatement("select * from tb_member where m_id=?");
+	pstmt.setString(1, send_id);
+	
+	rs = pstmt.executeQuery();
+	if(rs.next()){
+		dbid = rs.getString("m_id");
+		dbpw = rs.getString("m_pw");
+		dblevel = rs.getString("m_level");
+		dbname = rs.getString("m_name");
+		dbemail = rs.getString("m_email");
+		//콘솔창에 출력한다
+	}
+	
+	
+} catch(SQLException ex) {
+	out.println(ex.getMessage());
+	ex.printStackTrace();
+} finally {
+	// 6. 사용한 Statement 종료
+	if (rs != null) try { rs.close(); } catch(SQLException ex) {}
+	if (pstmt != null) try { pstmt.close(); } catch(SQLException ex) {}
+	
+	// 7. 커넥션 종료
+	if (conn != null) try { conn.close(); } catch(SQLException ex) {}
+}
 %>
 <form action="<%= request.getContextPath() %>/mupdate/m_update_pro.jsp" method="post">
 <table border="1">
